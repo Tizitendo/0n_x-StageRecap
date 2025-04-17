@@ -2,7 +2,7 @@
 	"name": "StageRecap",
 	"version_number": "1.0.0",
 	"website_url": "https://github.com/Tizitendo/Onyx-ArtificerPlus",
-	"description": "Adds QOL elements and buffs artis alts",
+	"description": "Shows all interactables and drones after leaving a stage",
 	"dependencies": [
 		"ReturnOfModding-ReturnOfModding-1.0.48",
 		"RoRRModdingToolkit-RoRR_Modding_Toolkit-1.2.1",

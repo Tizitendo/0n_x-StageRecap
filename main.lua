@@ -8,66 +8,98 @@ mods.on_all_mods_loaded(function()
         end
     end
     params = {
-        Version = 0.01,
+        Version = 0.02,
         ChatKey = -1,
         InteractableList = {
-            oShop2 = 2,
-            oRiftChest1 = 2,
             oActivator = 1,
+            oArtiSnap = 0,
+            oArtifactButton = 0,
             oBarrel1 = 1,
-            oChest4 = 2,
-            oTeleporterFake = 0,
-            oShrineMountain = 2,
-            oChest1 = 2,
-            oChestHealing2 = 2,
             oBarrel2 = 1,
-            oGauss = 0,
-            oTeleporter = 0,
-            oShrine1 = 2,
-            oShrine2 = 2,
-            oCommandFinal = 0,
-            oMedCab = 1,
-            oShop1 = 2,
-            oChestUtility2 = 2,
-            oMedbay = 0,
-            oUseChest = 1,
-            oRoboBuddybroken = 0,
-            oDroneItem = 2,
-            oHiddenHand = 0,
-            oChestHealing1 = 2,
-            oGunChest = 2,
-            oTeleporterEpic = 0,
-            oDroneUpgrader = 1,
-            oShopEquipment = 2,
-            oBarrelEquipment = 2,
-            oChestDamage2 = 2,
             oBarrel3 = 2,
-            oChestToxin = 2,
-            oChest5 = 2,
-            oBarrel4 = 2,
+            oBarrelEquipment = 2,
             oBlastdoorPanel = 0,
+            oBlockDestroy = 0,
+            oBlockDestroy2 = 0,
+            oBossKiller = 2,
+            oChest1 = 2,
+            oChest2 = 2,
+            oChest4 = 2,
+            oChest5 = 2,
             oChestDamage1 = 2,
+            oChestDamage2 = 2,
+            oChestHealing1 = 2,
+            oChestHealing2 = 2,
+            oChestToxin = 2,
             oChestUtility1 = 2,
-            oShrine3 = 2,
+            oChestUtility2 = 2,
+            oCommand = 0,
+            oCommandFinal = 0,
+            oDeadman = 0,
+            oDoor = 0,
+            oDroneItem = 2,
             oDroneRecycler = 1,
-            oChest2 = 2
+            oDroneUpgrader = 1,
+            oEfMine = 0,
+            oEfPoisonMine = 0,
+            oFeralCage = 0,
+            oGauss = 0,
+            oGunChest = 0,
+            oGunchest = 0,
+            oHiddenHand = 0,
+            oIfritTower = 0,
+            oMedCab = 0,
+            oMedbay = 0,
+            oMedcab = 0,
+            oMushroomButton = 0,
+            oRiftChest1 = 0,
+            oRoboBuddyBroken = 0,
+            oRoboBuddybroken = 0,
+            oScreen = 0,
+            oShamGBlock = 0,
+            oShop1 = 2,
+            oShop2 = 2,
+            oShopEquipment = 2,
+            oShrine1 = 2,
+            oShrine2 = 1,
+            oShrine3 = 2,
+            oShrine4 = 2,
+            oShrine5 = 1,
+            oShrineMountain = 1,
+            oTeleporter = 0,
+            oTeleporterEpic = 0,
+            oTeleporterFake = 0,
+            oTimedArtifact = 0,
+            oUsechest = 0,
+            oVendor = 2
         },
         droneList = {
-            oDrone5Item = 2,
-            oDrone4Item = 2,
-            oDrone3Item = 2,
-            oDrone8Item = 2,
+            oDrone10Item = 2,
+            oDrone1Item = 2,
             oDrone2Item = 2,
+            oDrone3Item = 2,
+            oDrone4Item = 2,
+            oDrone5Item = 2,
             oDrone6Item = 2,
-            oDrone1Item = 2
+            oDrone7Item = 2,
+            oDrone8Item = 2,
+            oDroneGolemItem = 2
         }
     }
-    params = Toml.config_update(_ENV["!guid"], params) -- Load Save
+    local oldparams = Toml.config_update(_ENV["!guid"], params) -- Load Save
+    if oldparams.Version == params.Version then
+        params = oldparams
+    end
 end)
 
 local openRecap = false
 local ActivatedTP = false
 local StageInteractables = {}
+
+local blacklist = {
+    gm.constants.oBNoSpawn, gm.constants.oBarrel4
+}
+
 Initialize(function()
     local InteractableList = {}
     local stackList = {}
@@ -85,19 +117,27 @@ Initialize(function()
 
     gm.post_script_hook(gm.constants.instance_create_depth, function(self, other, result, args)
         if (result.value.active == 0 or GM.object_get_parent(result.value.object_index) == gm.constants.pInteractableChest) and 
-        result.value.sprite_index ~= -1 and result.value:get_object_index_self() ~= gm.constants.oBNoSpawn and 
+        result.value.sprite_index ~= -1 and 
         GM.object_get_parent(result.value.object_index) ~= gm.constants.pInteractableDrone then
             if params.InteractableList[result.value.object_name] == nil then
                 params.InteractableList[result.value.object_name] = 0
                 Toml.save_cfg(_ENV["!guid"], params)
             end
-            if params.InteractableList[result.value.object_name] == 0 then
+            if params.InteractableList[result.value.object_name] == 0 or result.value.x < 0 then
                 return
             end
+            for _, listItem in ipairs(blacklist) do
+                if result.value.object_index == listItem then
+                    return
+                end
+            end
+
+            -- log.warning(result.value.object_name)
+            -- Helper.log_struct(result.value)
 
             local newtoList = true
             for i, interactable in ipairs(InteractableList) do
-                if interactable:get_object_index_self() == result.value:get_object_index_self() then
+                if interactable.object_index == result.value.object_index then
                     newtoList = false
                     stackList[i] = stackList[i] + 1
                 end
@@ -106,7 +146,9 @@ Initialize(function()
                 Instance.wrap(result.value):get_data().maxCharges = result.value.charges
             end
             if newtoList then
-                table.insert(InteractableList, result.value)
+                table.insert(InteractableList, Object.wrap(result.value.object_index):create(-1000, 0).value)
+                log.warning(result.value.object_name)
+                -- table.insert(InteractableList, result.value)
                 table.insert(stackList, 1)
                 table.insert(activatedList, 0)
             end
@@ -115,7 +157,7 @@ Initialize(function()
         if result.value:get_object_index_self() and GM.object_get_parent(result.value:get_object_index_self()) ==
             gm.constants.pInteractableDrone then
             if params.droneList[result.value.object_name] == nil then
-                params.droneList[result.value.object_name] = false
+                params.droneList[result.value.object_name] = 0
                 Toml.save_cfg(_ENV["!guid"], params)
             end
             if params.droneList[result.value.object_name] == 0 then
@@ -129,37 +171,44 @@ Initialize(function()
                 end
             end
             if newdrone then
-                local player = Player.get_client()
                 table.insert(droneList, Object.wrap(result.value.object_index):create(-1000, 0).value)
             end
         end
     end)
 
     gm.pre_script_hook(gm.constants.interactable_set_active, function(self, other, result, args)
-        -- get teleporter when interacting with it
+        -- set get number of active and non active interactables
         if self.object_index == gm.constants.oTeleporter or self.object_index == gm.constants.oTeleporterEpic then
             for i, type in ipairs(InteractableList) do
                 for _, interactable in ipairs(Instance.find_all(type:get_object_index_self())) do
                     if _ == 1 then
                         activatedList[i] = 0
                     end
-
-                    if interactable:get_data().maxCharges ~= nil then
-                        if interactable.charges < 0 then
-                            activatedList[i] = activatedList[i] + interactable.charges /
+                    if interactable.x > 0 then
+                        if interactable:get_data().maxCharges ~= nil then
+                            if interactable.charges < 0 then
+                                activatedList[i] = activatedList[i] + interactable.charges /
+                                                       interactable:get_data().maxCharges
+                            end
+                            activatedList[i] = activatedList[i] +
+                                                   (interactable:get_data().maxCharges - interactable.charges) /
                                                    interactable:get_data().maxCharges
-                        end
-                        activatedList[i] = activatedList[i] +
-                                               (interactable:get_data().maxCharges - interactable.charges) /
-                                               interactable:get_data().maxCharges
-                    else
-                        if interactable.active ~= 0 then
-                            activatedList[i] = activatedList[i] + 1
+                        else
+                            if interactable.active ~= 0 then
+                                activatedList[i] = activatedList[i] + 1
+                            end
                         end
                     end
                 end
-                if stackList[i] ~= #Instance.find_all(type:get_object_index_self()) then
-                    activatedList[i] = stackList[i] - #Instance.find_all(type:get_object_index_self())
+                -- check for things that can disappear when activated (gauss turret and probably some more stuff)
+                if type.spawns then
+                    if stackList[i] ~= #Instance.find_all(type:get_object_index_self()) - type.spawns - 1 then
+                        activatedList[i] = stackList[i] - #Instance.find_all(type:get_object_index_self()) + type.spawns + 1
+                    end
+                else
+                    if stackList[i] ~= #Instance.find_all(type:get_object_index_self()) - 1 then
+                        activatedList[i] = stackList[i] - #Instance.find_all(type:get_object_index_self()) + 1
+                    end
                 end
             end
         end
@@ -178,30 +227,29 @@ Initialize(function()
 
             gm.draw_set_font(1)
             gm.draw_set_alpha(1 * fade)
+
+            -- get activated and not activated interactables for final percentage
             local numInteractables = 0
             local numActivated = 0
-            for i = 0, #InteractableList - 1 do
-                if params.InteractableList[InteractableList[i + 1].object_name] == 2 then
-                    numActivated = numActivated + activatedList[i + 1]
-                    numInteractables = numInteractables + stackList[i + 1]
+            for i, Interactable in ipairs(InteractableList) do
+                -- log.warning(Interactable.object_name, Interactable)
+                if params.InteractableList[Interactable.object_name] == 2 then
+                    numActivated = numActivated + activatedList[i]
+                    numInteractables = numInteractables + stackList[i]
+
+                    -- log.warning(Interactable.object_name, activatedList[i], stackList[i])
                 end
             end
-            for k, v in ipairs(droneList) do
-                if v and params.droneList[v.object_name] == 2 then
-                    numInteractables = numInteractables + #Instance.find_all(v:get_object_index_self()) - 1
-                end
-            end
-            for i = #InteractableList, #InteractableList + #droneList - 1 do
-                if droneList[i + 1] and params.droneList[droneList[i + 1].object_name] == 2 then
-                    numInteractables = numInteractables +
-                                           #Instance.find_all(
-                            droneList[i - #InteractableList + 1]:get_object_index_self())
+            for i, drone in ipairs(droneList) do
+                if drone and params.droneList[drone.object_name] == 2 then
+                    numInteractables = numInteractables + #Instance.find_all(drone:get_object_index_self()) - 1
                 end
             end
             gm.draw_text_transformed(ViewWidth * 0.63, ViewHeight * 0.29,
                 "Stage Clear: " .. math.floor((numActivated / numInteractables) * 100) .. "%", ViewHeight / 600,
                 ViewHeight / 600, 0)
 
+                -- log.warning("--------")
             for i = 0, #InteractableList - 1 do
                 local spriteScale = math.max(gm.sprite_get_height(InteractableList[i + 1].sprite_index),
                                     gm.sprite_get_width(InteractableList[i + 1].sprite_index)) ^ 1.6
@@ -211,6 +259,7 @@ Initialize(function()
                                 ViewHeight * 0.25 + ViewHeight * (math.floor(i / 5) + 1) * 0.15,
                                 ViewHeight / spriteScale + ViewHeight / 1500, ViewHeight / spriteScale + ViewHeight / 1500, 0,
                                 Color.WHITE, 1)
+                -- log.warning(InteractableList[i + 1].object_name)
 
                 gm.draw_set_colour(3714480)
                 if activatedList[i + 1] == stackList[i + 1] then

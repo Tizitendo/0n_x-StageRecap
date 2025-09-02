@@ -147,7 +147,7 @@ Initialize(function()
             end
             if newtoList then
                 table.insert(InteractableList, Object.wrap(result.value.object_index):create(-1000, 0).value)
-                log.warning(result.value.object_name)
+                -- log.warning(result.value.object_name)
                 -- table.insert(InteractableList, result.value)
                 table.insert(stackList, 1)
                 table.insert(activatedList, 0)
@@ -215,7 +215,7 @@ Initialize(function()
     end)
 
     gm.post_code_execute("gml_Object_oInit_Draw_64", function(self, other)
-        if gm._mod_game_getDirector() ~= -4 and (gm._mod_game_getDirector().teleporter_active >= 4 or openRecap) then
+        if gm._mod_game_getDirector() and gm._mod_game_getDirector() ~= -4 and (gm._mod_game_getDirector().teleporter_active >= 4 or openRecap) then
             if fade < 1 then
                 fade = fade + 0.1
             end
@@ -225,7 +225,7 @@ Initialize(function()
             gm.draw_rectangle_colour(ViewWidth * 0.3, ViewHeight * 0.22, ViewWidth * 0.7, ViewHeight * 0.75, 0, 0, 0, 0,
                 false);
 
-            gm.draw_set_font(1)
+            gm.draw_set_font(0)
             gm.draw_set_alpha(1 * fade)
 
             -- get activated and not activated interactables for final percentage
@@ -249,17 +249,15 @@ Initialize(function()
                 "Stage Clear: " .. math.floor((numActivated / numInteractables) * 100) .. "%", ViewHeight / 600,
                 ViewHeight / 600, 0)
 
-                -- log.warning("--------")
             for i = 0, #InteractableList - 1 do
                 local spriteScale = math.max(gm.sprite_get_height(InteractableList[i + 1].sprite_index),
                                     gm.sprite_get_width(InteractableList[i + 1].sprite_index)) ^ 1.6
 
-                gm.draw_sprite_ext(InteractableList[i + 1].sprite_index, 0,
+                self:draw_sprite_ext(InteractableList[i + 1].sprite_index, 0,
                                 ViewWidth * 0.29 + ViewWidth * ((i % 5) + 1) * 0.07,
                                 ViewHeight * 0.25 + ViewHeight * (math.floor(i / 5) + 1) * 0.15,
                                 ViewHeight / spriteScale + ViewHeight / 1500, ViewHeight / spriteScale + ViewHeight / 1500, 0,
                                 Color.WHITE, 1)
-                -- log.warning(InteractableList[i + 1].object_name)
 
                 gm.draw_set_colour(3714480)
                 if activatedList[i + 1] == stackList[i + 1] then
@@ -292,14 +290,15 @@ Initialize(function()
                 #Instance.find_all(droneList[i - #InteractableList + 1]:get_object_index_self()) > 1 then
                     local spriteScale = math.max(gm.sprite_get_width(droneList[i - #InteractableList + 1].sprite_index),
                                         gm.sprite_get_height(droneList[i - #InteractableList + 1].sprite_index)) + 100
-                    gm.draw_sprite_ext(droneList[i - #InteractableList + 1].sprite_index, 0,
+                    self:draw_sprite_ext(droneList[i - #InteractableList + 1].sprite_index, 0,
                                     ViewWidth * 0.29 + ViewWidth * ((i % 5) + 1) * 0.07,
                                     ViewHeight * 0.25 + ViewHeight * (math.floor(i / 5) + 1) * 0.15, ViewHeight / 3 / spriteScale,
                                     ViewHeight / 3 / spriteScale, 0, Color.WHITE, 1)
 
                     gm.draw_text_transformed(ViewWidth * 0.31 + ViewWidth * ((i % 5) + 1) * 0.07,
-                                            ViewHeight * 0.28 + ViewHeight * (math.floor(i / 5) + 1) * 0.15, #Instance.find_all(
-                                            droneList[i - #InteractableList + 1]:get_object_index_self()) - 1, ViewHeight / 600,
+                                            ViewHeight * 0.28 + ViewHeight * (math.floor(i / 5) + 1) * 0.15, 
+                                            #Instance.find_all(droneList[i - #InteractableList + 1]:get_object_index_self()) - 1, 
+                                            ViewHeight / 600,
                                             ViewHeight / 600, 0)
                 end
             end
